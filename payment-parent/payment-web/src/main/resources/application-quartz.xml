@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/task
+		http://www.springframework.org/schema/task/spring-task.xsd"
+	default-lazy-init="false">
+
+<!-- 	<task:annotation-driven /> -->
+
+	<bean id="jobFactory" class="com.xiaoerzuche.biz.payment.schedule.PaymentSchedulerFactory"></bean>
+
+	<!-- 总调度用于启动Spring定时器begin,全部的定时器都放在这里触发，不允许私自再随便加 BEGIN -->
+	<bean id="schedulerFactoryBean"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="applicationContextSchedulerContextKey" value="applicationContextKey" />
+		<property name="autoStartup" value="true" />
+		<property name="jobFactory" ref="jobFactory"></property>
+		<property name="dataSource" ref="druid_dataSource"/>
+		<property name="configLocation" value="classpath:config/quartz.properties" /> 
+		<property name="triggers">
+			<list>
+				<ref bean="messageScheduleJobTrigger" />	<!-- 定期扫描redis消息队列，推送短信或微信模板   -->
+				<ref bean="zmBillDefaultScheduleJobTrigger"/> <!-- 已违约账单处理  -->
+				<ref bean="zmUnSettledBillJobTrigger"/> <!-- 未完结账单主动查询处理  -->
+				<ref bean="zmBillDefaultToSetteldJobTrigger"/> <!-- 未完结账单主动查询处理  -->
+				<ref bean="zmBillpushScheduleJobTrigger"></ref> <!-- 芝麻信用账单n+1天上报 -->
+			</list>
+		</property>
+	</bean>
+
+	<!-- 定期扫描redis消息队列，推送短信或微信模板  -->
+	<bean id="messageScheduleJobTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="messageScheduleJob" />
+		<property name="cronExpression">
+			<value>0/30 * * * * ?</value>
+		</property>
+	</bean>
+
+	<bean name="messageScheduleJob"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="Durability" value="true"/>
+		<property name="jobClass"
+			value="com.xiaoerzuche.biz.payment.schedule.MessageJob" />
+	</bean>
+	<!-- 定期扫描redis消息队列，推送短信或微信模板  end -->
+	
+	<!-- 芝麻信用账单N+1上传   -->
+		<bean id="zmBillpushScheduleJobTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="zmBillpushScheduleJob" />
+		<property name="cronExpression">
+			<value>0 0 6 * * ?</value>
+		</property>
+	</bean>
+
+	<bean name="zmBillpushScheduleJob"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="Durability" value="true"/>
+		<property name="jobClass"
+			value="com.xiaoerzuche.biz.zmxy.schedule.ZmBillpushJob" />
+	</bean>
+	<!-- 芝麻信用账单N+1上传  end -->
+	
+	<!-- 已违约账单处理   -->
+		<bean id="zmBillDefaultScheduleJobTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="zmBillDefaultScheduleJob" />
+		<property name="cronExpression">
+			<value>0 30 0 * * ?</value>
+		</property>
+	</bean>
+
+	<bean name="zmBillDefaultScheduleJob"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="Durability" value="true"/>
+		<property name="jobClass"
+			value="com.xiaoerzuche.biz.zmxy.schedule.ZmBillDefaultJob" />
+	</bean>
+	<!-- 已违约账单处理  end -->
+	
+	<!-- 未完结账单主动查询处理   -->
+		<bean id="zmUnSettledBillJobTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="zmUnSettledBillJob" />
+		<property name="cronExpression">
+			<value>0 0 2 * * ?</value>
+		</property>
+	</bean>
+
+	<bean name="zmUnSettledBillJob"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="Durability" value="true"/>
+		<property name="jobClass"
+			value="com.xiaoerzuche.biz.zmxy.schedule.ZmUnSettledBillJob" />
+	</bean>
+	<!-- 未完结账单主动查询处理  end -->
+
+	<!-- 未完结账单主动查询处理   -->
+		<bean id="zmBillDefaultToSetteldJobTrigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="zmBillDefaultToSetteldJob" />
+		<property name="cronExpression">
+			<value>0 0 4 * * ?</value>
+		</property>
+	</bean>
+
+	<bean name="zmBillDefaultToSetteldJob"
+		class="org.springframework.scheduling.quartz.JobDetailFactoryBean">
+		<property name="Durability" value="true"/>
+		<property name="jobClass"
+			value="com.xiaoerzuche.biz.zmxy.schedule.ZmBillDefaultToSetteldJob" />
+	</bean>
+	<!-- 未完结账单主动查询处理  end -->	
+	
+</beans>

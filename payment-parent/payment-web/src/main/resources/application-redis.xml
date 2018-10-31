@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:tool="http://www.springframework.org/schema/tool"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="
+    	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/tool http://www.springframework.org/schema/tool/spring-tool-4.0.xsd
+  		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+  		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+  		http://www.springframework.org/schema/mvc  http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+  		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd"
+  		default-lazy-init="false">
+
+	<!-- redis 封装 -->
+	<bean id="redis" class="com.xiaoerzuche.common.core.data.redis.RedisImpl" init-method="init" destroy-method="destroy">		
+		<!-- 设置redis 封装池的参数 --> 
+		<property name="server" value="${redis.serverAndPort}" />
+		<property name="maxActive" value="${redis.maxActive}" />
+		<property name="timeout" value="${redis.timeout}" />
+		<property name="initialPoolSize" value="${redis.initialPoolSize}" />
+		<property name="password" value="${redis.password}" />
+	</bean>
+</beans>

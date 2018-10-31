@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:tool="http://www.springframework.org/schema/tool"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="
+    	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/tool http://www.springframework.org/schema/tool/spring-tool-4.0.xsd
+  		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+  		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+  		http://www.springframework.org/schema/mvc  http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+  		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+  		http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd
+  		"
+  		default-lazy-init="false"> 
+	<!-- 启动Spring MVC的注解功能，完成请求和注解POJO的映射,解决@ResponseBody乱码问题, 需要在annotation-driven之前,否则乱码问题同样无法解决 -->
+<!-- 	<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<bean
+					class="org.springframework.http.converter.StringHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/html;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+				<bean
+				class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+					<property name="supportedMediaTypes">
+						<list>
+							<value>application/json;charset=UTF-8</value>
+						</list>
+					</property>
+			    </bean>
+			</list>
+		</property>
+		<property name="webBindingInitializer">
+			<bean class="com.xiaoerzuche.common.core.web.CustomWebBindingInitializer">
+			</bean>
+		</property>
+	</bean> -->
+  		
+  	<!-- 注解支持 -->
+	<mvc:annotation-driven>
+		<mvc:message-converters>
+<!-- 	        <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+	        <bean class="org.springframework.http.converter.ResourceHttpMessageConverter"/> -->
+<!-- 	        <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">
+	        	<property name="objectMapper" ref="customObjectMapper"></property>
+	        </bean> -->
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">  
+                <property name="objectMapper">  
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">  
+                        <property name="dateFormat">  
+                            <bean class="java.text.SimpleDateFormat">  
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />  
+                            </bean>  
+                        </property>  
+                    </bean>  
+                </property>  
+            </bean>  
+    	</mvc:message-converters>
+		<mvc:async-support default-timeout="3000" />
+	</mvc:annotation-driven>
+	<bean id="customObjectMapper" class="com.xiaoerzuche.common.core.web.CustomObjectMapper"></bean> 
+	<context:component-scan base-package="com.xiaoerzuche.*.*.web">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	
+	<!--全局异常处理类-->
+	<bean id="exceptionHandler" class="com.xiaoerzuche.common.core.web.GlobalExceptionHandler"/> 
+	
+	<bean id="customWebBindingInitializer" class="com.xiaoerzuche.common.core.web.CustomWebBindingInitializer"/>
+	<!-- RestTemplate -->
+<!-- 	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate"></bean> -->
+	
+	<!--设置默认的视图解析器 采用JSP-->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	  	<property name="viewClass" value="org.springframework.web.servlet.view.JstlView" />
+		<!-- 设置前缀，即视图所在的路径 -->
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<!-- 设置后缀，即视图的扩展名 -->
+		<property name="suffix" value=".jsp" />
+		<property name="contentType" value="text/html; charset=UTF-8" />
+	</bean>
+	
+	<!-- 全局拦截器 -->
+	<mvc:interceptors>
+	<!-- 
+		 <mvc:interceptor>
+			<mvc:mapping path="/admin/**/*" />
+			<bean class="com.xiaoerzuche.biz.permission.interceptor.AdminPrivilegeInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/front/**/*.*" />
+			<bean class="com.xiaoerzuche.biz.permission.interceptor.FrontPrivilegeInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/rpc/payment/*.*" />
+			<bean class="com.xiaoerzuche.biz.payment.interceptor.PaySecurityInterceptor"/>
+		</mvc:interceptor>
+	-->
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<bean class="com.xiaoerzuche.common.core.security.SecurityInterceptor"/>
+		</mvc:interceptor>
+		<mvc:interceptor>
+			<mvc:mapping path="/api/**/*" />
+			<bean class="com.xiaoerzuche.biz.permission.interceptor.ApiPrivilegeInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<mvc:annotation-driven />
+	<mvc:resources mapping="/js/**" location="/WEB-INF/res/js/" />
+	<mvc:resources mapping="/css/**" location="/WEB-INF/res/css/" />
+	<mvc:resources mapping="/images/**" location="/WEB-INF/res/images/" />
+	<mvc:resources mapping="/html/**" location="/WEB-INF/html/" />
+	
+	<bean  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		 <property name="locations">
+		        <array>  
+		            <value>classpath:config/datasource.properties</value>
+					<value>classpath:config/wechat.properties</value>
+					<value>classpath:config/quartz.properties</value>
+		        </array>  
+		</property>
+	</bean>
+	
+</beans>

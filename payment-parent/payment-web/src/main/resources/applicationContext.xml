@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:tool="http://www.springframework.org/schema/tool"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="
+    	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/tool http://www.springframework.org/schema/tool/spring-tool-4.0.xsd
+  		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+  		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+  		http://www.springframework.org/schema/mvc  http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+  		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+  		http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd
+  		"
+  		default-lazy-init="false">
+
+	<context:annotation-config/>
+ 	
+	<context:component-scan base-package="com.xiaoerzuche.biz">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<context:component-scan base-package="com.xiaoerzuche.common.core"/>
+	<task:annotation-driven />
+    <!-- 开启AOP监听 只对当前配置文件有效 -->
+	<aop:aspectj-autoproxy expose-proxy="true"/>
+	
+	<!-- 配置事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="druid_dataSource" />
+	</bean>
+	<!-- 开启注解事务 只对当前配置文件有效 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+	
+	<import resource="classpath:application-datasource.xml"/>
+	<import resource="classpath:application-redis.xml"/>
+	<import resource="classpath:application-schedule.xml"/>
+	<import resource="classpath:application-pubsub.xml"/>
+	<import resource="classpath:application-quartz.xml"/>
+	
+	
+	<bean id="refreshCacheServce" class="com.xiaoerzuche.common.core.cache.RefreshCacheServceImp"></bean>
+	<bean id="refreshCacheTimer" class="com.xiaoerzuche.common.core.timer.RefreshCacheTimer"></bean>
+	<bean id="restTemplate" class="org.springframework.web.client.RestTemplate"></bean>
+	
+<!-- 	<context:property-placeholder file-encoding="UTF-8" location="classpath*:config/*.properties"/> -->
+   	
+	<bean  class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		 <property name="locations">
+		        <array>  
+		            <value>classpath:config/datasource.properties</value>
+					<value>classpath:config/wechat.properties</value>
+					<value>classpath:config/quartz.properties</value>
+		        </array>  
+		</property>
+	</bean>
+	
+</beans>
